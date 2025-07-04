@@ -14,15 +14,15 @@ import java.util.Map;
 
 public class OrderSteps {
     
-    private OrderService orderService;
-    private Order resultOrder;
-    private BigDecimal thresholdAmount;
-    private BigDecimal discountAmount;
-    private boolean buyOneGetOneCosmeticsActive;
+    private final SharedTestContext sharedTestContext;
+    
+    public OrderSteps(SharedTestContext sharedTestContext) {
+        this.sharedTestContext = sharedTestContext;
+    }
     
     @Given("no promotions are applied")
     public void noPromotionsAreApplied() {
-        orderService = new OrderService();
+        sharedTestContext.setOrderService(new OrderService());
     }
     
     @When("a customer places an order with:")
@@ -41,7 +41,8 @@ public class OrderSteps {
             items.add(item);
         }
         
-        resultOrder = orderService.checkout(items.toArray(new OrderItem[0]));
+        Order order = sharedTestContext.getOrderService().checkout(items.toArray(new OrderItem[0]));
+        sharedTestContext.setResultOrder(order);
     }
     
     @Then("the order summary should be:")
@@ -49,25 +50,38 @@ public class OrderSteps {
         List<Map<String, String>> rows = dataTable.asMaps(String.class, String.class);
         Map<String, String> expectedRow = rows.get(0);
         
+        Order resultOrder = sharedTestContext.getResultOrder();
+        
         if (expectedRow.containsKey("totalAmount")) {
             BigDecimal expectedTotal = new BigDecimal(expectedRow.get("totalAmount"));
-            Assertions.assertThat(resultOrder.getTotalAmount()).isEqualTo(expectedTotal);
+            Assertions.assertThat(resultOrder.getTotalAmount()).isEqualByComparingTo(expectedTotal);
         }
         
         if (expectedRow.containsKey("originalAmount")) {
             BigDecimal expectedOriginal = new BigDecimal(expectedRow.get("originalAmount"));
-            Assertions.assertThat(resultOrder.getOriginalAmount()).isEqualTo(expectedOriginal);
+            Assertions.assertThat(resultOrder.getOriginalAmount()).isEqualByComparingTo(expectedOriginal);
         }
         
         if (expectedRow.containsKey("discount")) {
             BigDecimal expectedDiscount = new BigDecimal(expectedRow.get("discount"));
-            Assertions.assertThat(resultOrder.getDiscount()).isEqualTo(expectedDiscount);
+            Assertions.assertThat(resultOrder.getDiscount()).isEqualByComparingTo(expectedDiscount);
+        }
+        
+        if (expectedRow.containsKey("thresholdDiscount")) {
+            BigDecimal expectedThresholdDiscount = new BigDecimal(expectedRow.get("thresholdDiscount"));
+            Assertions.assertThat(resultOrder.getThresholdDiscount()).isEqualByComparingTo(expectedThresholdDiscount);
+        }
+        
+        if (expectedRow.containsKey("double11Discount")) {
+            BigDecimal expectedDouble11Discount = new BigDecimal(expectedRow.get("double11Discount"));
+            Assertions.assertThat(resultOrder.getDouble11Discount()).isEqualByComparingTo(expectedDouble11Discount);
         }
     }
     
     @Then("the customer should receive:")
     public void theCustomerShouldReceive(DataTable dataTable) {
         List<Map<String, String>> expectedItems = dataTable.asMaps(String.class, String.class);
+        Order resultOrder = sharedTestContext.getResultOrder();
         
         Assertions.assertThat(resultOrder.getItems()).hasSize(expectedItems.size());
         
@@ -85,21 +99,20 @@ public class OrderSteps {
         List<Map<String, String>> rows = dataTable.asMaps(String.class, String.class);
         Map<String, String> row = rows.get(0);
         
-        thresholdAmount = new BigDecimal(row.get("threshold"));
-        discountAmount = new BigDecimal(row.get("discount"));
+        BigDecimal thresholdAmount = new BigDecimal(row.get("threshold"));
+        BigDecimal discountAmount = new BigDecimal(row.get("discount"));
         
-        if (orderService == null) {
-            orderService = new OrderService();
+        if (sharedTestContext.getOrderService() == null) {
+            sharedTestContext.setOrderService(new OrderService());
         }
-        orderService.setThresholdDiscount(thresholdAmount, discountAmount);
+        sharedTestContext.getOrderService().setThresholdDiscount(thresholdAmount, discountAmount);
     }
     
     @Given("the buy one get one promotion for cosmetics is active")
     public void theBuyOneGetOnePromotionForCosmeticsIsActive() {
-        buyOneGetOneCosmeticsActive = true;
-        if (orderService == null) {
-            orderService = new OrderService();
+        if (sharedTestContext.getOrderService() == null) {
+            sharedTestContext.setOrderService(new OrderService());
         }
-        orderService.setBuyOneGetOneCosmeticsPromotion(true);
+        sharedTestContext.getOrderService().setBuyOneGetOneCosmeticsPromotion(true);
     }
 }

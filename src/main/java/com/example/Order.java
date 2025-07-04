@@ -7,6 +7,8 @@ public class Order {
     private BigDecimal totalAmount;
     private BigDecimal originalAmount;
     private BigDecimal discount;
+    private BigDecimal thresholdDiscount;
+    private BigDecimal double11Discount;
     private List<OrderItem> items;
     
     public Order() {
@@ -49,5 +51,21 @@ public class Order {
     
     public void setItems(List<OrderItem> items) {
         this.items = items;
+    }
+    
+    public BigDecimal getThresholdDiscount() {
+        return thresholdDiscount;
+    }
+    
+    public void setThresholdDiscount(BigDecimal thresholdDiscount) {
+        this.thresholdDiscount = thresholdDiscount;
+    }
+    
+    public BigDecimal getDouble11Discount() {
+        return double11Discount;
+    }
+    
+    public void setDouble11Discount(BigDecimal double11Discount) {
+        this.double11Discount = double11Discount;
     }
 }
